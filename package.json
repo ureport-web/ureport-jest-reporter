@@ -1,0 +1,73 @@
+{
+  "name": "ureport-jest-reporter",
+  "version": "1.0.0",
+  "description": "Jest reporter plugin for UReport — ships test results automatically",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && tsc -p tsconfig.types.json",
+    "test": "node_modules/.bin/jest",
+    "test:unit": "node_modules/.bin/jest",
+    "prepublishOnly": "npm run test && npm run build"
+  },
+  "keywords": [
+    "jest",
+    "reporter",
+    "ureport",
+    "testing"
+  ],
+  "author": "yizhongji@gmail.com",
+  "license": "MIT",
+  "peerDependencies": {
+    "jest": ">=27.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jest": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@jest/reporters": "^29.0.0",
+    "@jest/test-result": "^29.0.0",
+    "@jest/types": "^29.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/*.spec.ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "module": "CommonJS",
+            "moduleResolution": "node"
+          }
+        }
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

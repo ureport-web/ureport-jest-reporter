@@ -1,0 +1,62 @@
+import { validateOptions } from '../src/config';
+
+describe('validateOptions', () => {
+  const validBase = {
+    serverUrl: 'http://localhost:4100',
+    apiToken: 'test-token-abc123',
+    product: 'MyApp',
+    type: 'Unit',
+  };
+
+  test('returns merged options with defaults when all required fields provided', () => {
+    const result = validateOptions(validBase);
+    expect(result.serverUrl).toBe('http://localhost:4100');
+    expect(result.batchSize).toBe(50);
+    expect(result.saveRelations).toBe(true);
+    expect(result.autoDetectPlatform).toBe(true);
+    expect(typeof result.buildNumber).toBe('number');
+  });
+
+  test('uses provided buildNumber over default', () => {
+    const result = validateOptions({ ...validBase, buildNumber: '42' });
+    expect(result.buildNumber).toBe('42');
+  });
+
+  test.each(['serverUrl', 'apiToken', 'product', 'type'] as const)(
+    'throws when required field "%s" is missing',
+    (field) => {
+      const opts = { ...validBase, [field]: undefined };
+      expect(() => validateOptions(opts)).toThrow(
+        `[ureport-jest-reporter] Missing required option: "${field}"`,
+      );
+    },
+  );
+
+  test('throws when required field is empty string', () => {
+    expect(() => validateOptions({ ...validBase, serverUrl: '' })).toThrow(
+      '[ureport-jest-reporter] Missing required option: "serverUrl"',
+    );
+  });
+
+  test('applies custom batchSize', () => {
+    const result = validateOptions({ ...validBase, batchSize: 10 });
+    expect(result.batchSize).toBe(10);
+  });
+
+  test('respects saveRelations: false', () => {
+    const result = validateOptions({ ...validBase, saveRelations: false });
+    expect(result.saveRelations).toBe(false);
+  });
+
+  test('respects optional fields', () => {
+    const result = validateOptions({ ...validBase, team: 'QA', stage: 'staging' });
+    expect(result.team).toBe('QA');
+    expect(result.stage).toBe('staging');
+  });
+
+  test('does not have includeSteps or includeScreenshots', () => {
+    const result = validateOptions(validBase);
+    expect((result as unknown as Record<string, unknown>)['includeSteps']).toBeUndefined();
+    expect((result as unknown as Record<string, unknown>)['includeScreenshots']).toBeUndefined();
+  });
+});
