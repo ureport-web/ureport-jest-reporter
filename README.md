@@ -87,7 +87,7 @@ module.exports = {
 | `saveRelations`      | `boolean`          | No       | `true`        | Save test relation records (uid, components, teams, tags) after the build      |
 | `autoDetectPlatform` | `boolean`          | No       | `true`        | Set to `false` to disable auto-detection of `platform` and `platform_version`  |
 | `outputFile`         | `string`           | No       | —             | Write the full submitted payload to this JSON file after the run               |
-| `quickInfoAnnotations` | `string[]`       | No       | `[]`          | Reserved for future use                                                        |
+| `quickInfoAnnotations` | `string[]`       | No       | `[]`          | No effect in the current version — reserved for future use                     |
 
 ---
 
@@ -157,6 +157,28 @@ describe("Auth", () => {
   });
 });
 ```
+
+---
+
+## Relations
+
+Relations link each test to a stable identity in UReport (uid, components, teams, tags, custom fields). The reporter saves one relation per unique uid after the build finalizes — no setup needed beyond using `ureport()`.
+
+What gets saved per relation:
+
+| Field | Source |
+|---|---|
+| `uid` | `ureport({ uid })` or full test name fallback |
+| `product` / `type` | reporter options |
+| `file` / `path` | test file location (relative to cwd) |
+| `tags` | `ureport({ tags })` |
+| `components` | `ureport({ components })` |
+| `teams` | `ureport({ teams })` |
+| `customs` | any extra keys in `ureport({})` (e.g. `jira`, `owner`) |
+
+Relations are deduplicated by uid — one per test per run. Disable with `saveRelations: false`.
+
+> **Note:** Jest has no native tag-from-title extraction (`@smoke` in test names is NOT auto-extracted). Use `ureport({ tags: ['smoke'] })` explicitly.
 
 ---
 
