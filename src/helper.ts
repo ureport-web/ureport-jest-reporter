@@ -2,12 +2,16 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+import type { UReportStep } from './types.js';
 
 export interface UReportMeta {
   uid?: string;
   components?: string[];
   teams?: string[];
   tags?: string[];
+  steps?: UReportStep[];
+  setup?: UReportStep[];
+  teardown?: UReportStep[];
   [key: string]: unknown;
 }
 

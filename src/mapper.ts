@@ -65,28 +65,41 @@ export function mapAssertionResult(
 
   const uid = (meta?.uid as string | undefined) ?? assertion.fullName;
 
+  // Extract @word tags from test title
+  const titleTags = (assertion.fullName.match(/@(\w+)/g) ?? []).map(t => t.slice(1));
+
   const info: UReportTestInfo = {
     file: basename(testFilePath),
     path: relative(process.cwd(), dirname(testFilePath)),
     duration: formatDuration(durationMs),
   };
 
+  const quickInfoSet = new Set(options.quickInfoAnnotations ?? []);
+  const RESERVED_META_KEYS = new Set(['uid', 'tags', 'components', 'teams', 'steps', 'setup', 'teardown']);
+
   if (meta) {
-    if (Array.isArray(meta.tags) && (meta.tags as string[]).length > 0) {
-      info.tags = meta.tags as string[];
-    }
+    const metaTags = Array.isArray(meta.tags) ? (meta.tags as string[]) : [];
+    const allTags = [...new Set([...metaTags, ...titleTags])];
+    if (allTags.length > 0) info.tags = allTags;
+
     if (Array.isArray(meta.components) && (meta.components as string[]).length > 0) {
       info.components = meta.components as string[];
     }
     if (Array.isArray(meta.teams) && (meta.teams as string[]).length > 0) {
       info.teams = meta.teams as string[];
     }
-    // Custom fields (e.g. jira, owner) go into info as-is → become customs in relations
+    // Custom fields → quickInfo or info as-is
     for (const [key, value] of Object.entries(meta)) {
-      if (!['uid', 'tags', 'components', 'teams'].includes(key)) {
+      if (RESERVED_META_KEYS.has(key)) continue;
+      if (quickInfoSet.has(key)) {
+        const existing = (info['quickInfo'] as Array<{ key: string; value: string }> | undefined) ?? [];
+        info['quickInfo'] = [...existing, { key, value: String(value) }];
+      } else {
         info[key] = value;
       }
     }
+  } else if (titleTags.length > 0) {
+    info.tags = titleTags;
   }
 
   const payload: UReportTestPayload = {
@@ -100,6 +113,10 @@ export function mapAssertionResult(
     info,
   };
 
+  if (Array.isArray(meta?.steps) && (meta!.steps as unknown[]).length > 0) payload.body = meta!.steps as import('./types.js').UReportStep[];
+  if (Array.isArray(meta?.setup) && (meta!.setup as unknown[]).length > 0) payload.setup = meta!.setup as import('./types.js').UReportStep[];
+  if (Array.isArray(meta?.teardown) && (meta!.teardown as unknown[]).length > 0) payload.teardown = meta!.teardown as import('./types.js').UReportStep[];
+
   if (assertion.status === 'failed' && assertion.failureMessages.length > 0) {
     payload.failure = {
       error_message: assertion.failureMessages[0] ?? '',
@@ -110,8 +127,8 @@ export function mapAssertionResult(
   return payload;
 }
 
-// Keys on info that map to dedicated relation fields — not put into customs.
-const RELATION_INFO_KEYS = new Set(['file', 'path', 'tags', 'components', 'teams', 'duration']);
+// Keys on info that map to dedicated relation fields or are non-customs — not put into customs.
+const RELATION_INFO_KEYS = new Set(['file', 'path', 'tags', 'components', 'teams', 'duration', 'quickInfo']);
 
 export function mapToRelationPayload(
   test: UReportTestPayload,

@@ -1,3 +1,15 @@
+export interface UReportStepAttachment {
+  'content-type': 'json' | 'text';
+  content: string;
+}
+
+export interface UReportStep {
+  detail: string;
+  status: 'PASS' | 'FAIL';
+  steps?: UReportStep[];
+  attachment?: UReportStepAttachment;
+}
+
 export interface UReportTestRelationPayload {
   uid: string;
   product: string;
@@ -56,4 +68,7 @@ export interface UReportTestPayload {
   is_rerun: boolean;
   failure?: UReportFailure;
   info?: UReportTestInfo;
+  body?: UReportStep[];
+  setup?: UReportStep[];
+  teardown?: UReportStep[];
 }
